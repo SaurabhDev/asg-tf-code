@@ -4,7 +4,7 @@ resource "aws_autoscaling_group" "asg" {
     id      = aws_launch_template.lt.id
     version = aws_launch_template.lt.latest_version
   }
-  vpc_zone_identifier       = [data.aws_subnet.default.id]
+  vpc_zone_identifier       = [data.aws_subnet_ids.default.id]
   max_size                  = var.max_size
   min_size                  = var.min_size
   desired_capacity          = var.desired_capacity
@@ -100,10 +100,80 @@ resource "aws_autoscaling_policy" "policy" {
 
 resource "aws_security_group" "sg_asg" {
   name_prefix = "${var.use_dynamic_name}-sg"
-  //vpc_id      = "vpc-09383b1f01d572d46"
   vpc_id      = data.aws_vpc.default.id
 
   lifecycle {
     create_before_destroy = true
   }
 }
+
+
+resource "aws_alb_target_group" "alb" {
+  name                 = var.alb_name
+  port                 = var.alb_target_group_port
+  protocol             = var.alb_target_group_protocol
+  vpc_id               = data.aws_vpc.default.id
+  deregistration_delay = var.deregistration_delay
+
+  stickiness {
+    type            = "lb_cookie"
+    cookie_duration = var.stickiness["cookie_duration"]
+    enabled         = var.stickiness["enabled"]
+  }
+
+  health_check {
+    interval            = var.health_check["interval"]
+    path                = var.health_check["path"]
+    port                = var.health_check["port"]
+    healthy_threshold   = var.health_check["healthy_threshold"]
+    unhealthy_threshold = var.health_check["unhealthy_threshold"]
+    timeout             = var.health_check["timeout"]
+    protocol            = var.health_check["protocol"]
+    matcher             = var.health_check["matcher"]
+  }
+
+  target_type           = var.alb_target_group_type
+}
+
+resource "aws_alb" "alb" {
+  name            = var.alb_name
+  internal        = var.internal
+  subnets         = [data.aws_subnet_ids.default.id]
+  security_groups = [aws_security_group.sg_asg.id]
+
+  access_logs {
+    bucket  = var.log_bucket_name
+    enabled = true
+    prefix  = var.log_prefix
+  }
+
+  idle_timeout               = var.idle_timeout
+  enable_deletion_protection = var.enable_deletion_protection
+  ip_address_type            = var.ip_address_type
+}
+
+resource "aws_alb_listener" "alb" {
+  load_balancer_arn = aws_alb.alb.arn
+  port              = var.alb_listener_port
+
+  protocol          = var.alb_listener_protocol
+  default_action {
+    target_group_arn = aws_alb_target_group.alb.arn
+    type             = "forward"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_codedeploy_app" "code_deploy_app" {
+    name             = var.use_dynamic_name
+  }
+
+resource "aws_codedeploy_deployment_group" "deploy_group" {
+    app_name              = var.use_dynamic_name
+    deployment_group_name = "${var.use_dynamic_name}-DeploymentGroup"
+    service_role_arn      = var.iam_arn
+    autoscaling_groups = ["${aws_autoscaling_group.asg.name}"]
+  }

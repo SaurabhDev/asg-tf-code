@@ -15,6 +15,7 @@ image_id = "ami-0f540e9f488cfa27d"
 instance_type = "t2.micro"
 key_name = "dm-eu-west-2-dev-kp"
 iam_profile_arn = "arn:aws:iam::405079206131:instance-profile/dm-eu-west-2-dev-iam"
+iam_arn = "arn:aws:iam::405079206131:role/dm-eu-west-2-dev-iam"
 name_prefix = "dm-eu-west-2-dev-vpc"
 
 ## sizes for UI servers
@@ -24,3 +25,9 @@ desired_size = "1"
 scaleinoncpu = true
 user_data = "dev/user-data.tpl"
 
+alb_listener_port = "80"
+alb_target_group_port = "80"
+alb_target_group_protocol = "HTTP"
+alb_name = "dm-eu-west-2-dev"
+log_bucket_name = "devops-eu-west-2"
+log_prefix = "dev/ui/log"

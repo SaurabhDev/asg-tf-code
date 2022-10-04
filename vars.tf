@@ -225,7 +225,7 @@ variable "name_prefix" {
 variable "subnet_filter" {
   description = "Filter subnets by keywords."
   type = list(string)
-  default = ["eu-west-2a"]
+  default = ["eu-west-2a", "eu-west-2b"]
 }
 
 variable "role_arn" {}
@@ -233,3 +233,109 @@ variable "role_arn" {}
 variable "region" {}
 
 variable "iam_profile_arn" {}
+
+variable "iam_arn" {}
+
+##########################################
+#########  General Variables #############
+##########################################
+
+variable "alb_name" {
+  # default     = "default"
+  description = "The name of the loadbalancer"
+}
+#########################################
+###########  ALB Variables ##############
+#########################################
+
+# Required variables
+
+# Optional Variables
+variable "internal" {
+  description = "(Optional) If true, the ALB will be internal."
+  default     = true
+}
+
+variable "idle_timeout" {
+  description = "(Optional) The time in seconds that the connection is allowed to be idle. Default: 60."
+  default     = null
+}
+
+variable "enable_deletion_protection" {
+  description = "(Optional) If true, deletion of the load balancer will be disabled via the AWS API. This will prevent Terraform from deleting the load balancer. Defaults to false."
+  default     = null
+}
+
+variable "ip_address_type" {
+  description = "(Optional) The type of IP addresses used by the subnets for your load balancer. The possible values are ipv4 and dualstack"
+  default     = "ipv4"
+}
+
+#####################################################
+###########  ALB Targt Group Variables ##############
+#####################################################
+
+# Required variables
+variable "alb_target_group_port" {
+  description = " (Required) The port on which targets receive traffic, unless overridden when registering a specific target."
+}
+
+variable "alb_target_group_protocol" {
+  description = " (Required) The protocol to use for routing traffic to the targets."
+}
+
+# Optional variables
+variable "alb_target_group_type" {
+  description = " (Optional) The type of target that you must specify when registering targets with this target group."
+  default     = null
+}
+
+variable "deregistration_delay" {
+  description = "The default deregistration delay"
+  default     = null
+}
+
+variable "stickiness" {
+  description = "A list of for stickiness variables"
+  type        = map(string)
+  default = {
+    "cookie_duration" = 1
+    "enabled"         = false
+  }
+}
+
+variable "health_check" {
+  description = "(Optional) A Health Check block."
+  type        = map(string)
+  default = {
+    "interval"            = null
+    "path"                = "/"
+    "port"                = null
+    "healthy_threshold"   = null
+    "unhealthy_threshold" = null
+    "timeout"             = null
+    "protocol"            = null
+    "matcher"             = 200
+  }
+}
+
+##################################################
+###########  ALB Listener Variables ##############
+##################################################
+
+# Required variables
+variable "alb_listener_port" {
+  description = "(Required) The port on which the load balancer is listening."
+}
+
+# Optional Variables
+variable "alb_listener_protocol" {
+  description = "(Optional) The protocol for connections from clients to the load balancer. Valid values are HTTP and HTTPS. Defaults to HTTP."
+  default     = null
+}
+
+
+variable "log_bucket_name" {
+description = "(Required) The port on which the load balancer is listening."
+}
+variable "log_prefix" {}
